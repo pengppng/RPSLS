@@ -3,7 +3,10 @@
 
 pragma solidity >=0.7.0 <0.9.0;
 
-contract RPS {
+import "./CommitReveal.sol";
+import "./TimeUnit.sol";
+
+contract RPS  is CommitReveal, TimeUnit {
     uint public numPlayer = 0;
     uint public reward = 0;
     
@@ -34,7 +37,7 @@ contract RPS {
         _;
     }
 
-    function addPlayer() public payable {
+    function addPlayer(bytes32 commitHash) public payable onlyAllowedPlayers {
         require(numPlayer < 2);
         if (numPlayer > 0) {
             require(msg.sender != players[0]);
@@ -49,12 +52,25 @@ contract RPS {
         }
     }
 
+    function revealChoice(uint choice, bytes32 randomString) public {
+        require(numPlayer == 2, "Not enough players");
+        require(choice <= 4, "Invalid choice");
+        require(getHash(keccak256(abi.encodePacked(choice, randomString))) == player_commit[msg.sender], "Invalid reveal");
+        
+        player_choice[msg.sender] = choice;
+        player_not_played[msg.sender] = false;
+        numInput++;
+        if (numInput == 2) {
+            _checkWinnerAndPay();
+        }
+    }
+
     function input(uint choice, bytes32 randomString) public  {
         require(numPlayer == 2);
         require(player_not_played[msg.sender]);
         require(choice == 0 || choice == 1 || choice == 2 || choice == 3 || choice == 4);
         require(getHash(keccak256(abi.encodePacked(choice, randomString))) == player_commit[msg.sender], "Invalid reveal");
-        
+
         player_choice[msg.sender] = choice;
         player_not_played[msg.sender] = false;
         numInput++;

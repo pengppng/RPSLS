@@ -14,7 +14,6 @@ contract RPS is CommitReveal, TimeUnit {
     mapping(address => bytes32) public player_commit;
 
     address[] public players;
-    uint public startTime;
     uint public numInput = 0;
     uint public constant TIMEOUT = 5 minutes; // end session
 
